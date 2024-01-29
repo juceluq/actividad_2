@@ -49,10 +49,7 @@ public class Server {
     }
 
     private static void initializeBoard() {
-        prizes.put("Crucero", new int[]{rd.nextInt(ROWS), rd.nextInt(COLUMNS)});
-        prizes.put("Entradas", new int[]{rd.nextInt(ROWS), rd.nextInt(COLUMNS)});
-        prizes.put("Masaje", new int[]{rd.nextInt(ROWS), rd.nextInt(COLUMNS)});
-        prizes.put("1000€", new int[]{rd.nextInt(ROWS), rd.nextInt(COLUMNS)});
+        String[] prizeNames = {"Crucero", "Entradas", "Masaje", "1000€"};
 
         for (int i = 0; i < ROWS; i++) {
             for (int j = 0; j < COLUMNS; j++) {
@@ -60,10 +57,15 @@ public class Server {
             }
         }
 
-        for (Map.Entry<String, int[]> entry : prizes.entrySet()) {
-            String prize = entry.getKey();
-            int[] position = entry.getValue();
-            board[position[0]][position[1]] = prize;
+        for (String prize : prizeNames) {
+            int row, column;
+            do {
+                row = rd.nextInt(ROWS);
+                column = rd.nextInt(COLUMNS);
+            } while (!board[row][column].isEmpty()); // Repite si la posición ya está ocupada
+
+            board[row][column] = prize;
+            prizes.put(prize, new int[]{row, column});
         }
     }
 
@@ -81,8 +83,7 @@ public class Server {
         int clientId = getNextClientId();
 
         try (
-                ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
-                ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream())) {
+                ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream()); ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream())) {
             // Enviar ID al cliente
             out.writeObject(clientId);
             out.flush();
