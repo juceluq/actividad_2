@@ -135,7 +135,7 @@ public class Server {
     }
 
     private static boolean checkGameStatus(ObjectOutputStream out) throws IOException {
-        boolean gameContinues = prizes.size() > 0;
+        boolean gameContinues = !prizes.isEmpty();
 
         if (!gameContinues) {
             out.writeObject("El juego ha finalizado. No hay premios disponibles.");
