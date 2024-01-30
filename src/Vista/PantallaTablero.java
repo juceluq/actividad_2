@@ -50,7 +50,7 @@ public class PantallaTablero extends javax.swing.JFrame {
         }
     }
 
-    private void updateStats() {
+    private void updateJugadasPremios() {
         jTFJugadas.setText(Integer.toString(intentos));
         jTFPremios.setText(Integer.toString(premiosGanados));
     }
@@ -203,25 +203,25 @@ public class PantallaTablero extends javax.swing.JFrame {
                 ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
                 ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
             // Enviar las coordenadas al servidor
-            int row = Integer.parseInt(jTFFila.getText());
-            int column = Integer.parseInt(jTFColumnas.getText());
-            out.writeObject(new int[]{row, column});
+            int fila = Integer.parseInt(jTFFila.getText());
+            int columna = Integer.parseInt(jTFColumnas.getText());
+            out.writeObject(new int[]{fila, columna});
             out.flush();
 
             // Recibir la respuesta del servidor
-            String response = (String) in.readObject();
-            jTArea.append(response + "\n");
+            String respuesta = (String) in.readObject();
+            jTArea.append(respuesta + "\n");
 
             // Actualizar intentos y premios ganados
-            if (response.startsWith("Felicidades")) {
+            if (respuesta.startsWith("Felicidades")) {
                 premiosGanados++;
             }
             intentos++;
 
-            updateStats();
+            updateJugadasPremios();
 
             // Terminar si el juego ha finalizado
-            if (response.startsWith("Juego finalizado")) {
+            if (respuesta.startsWith("Juego finalizado")) {
                 jBEnviar.setEnabled(false);
             }
 
