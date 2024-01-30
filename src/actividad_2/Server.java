@@ -134,16 +134,18 @@ public class Server {
         }
     }
 
-    private static boolean verificarEstadoJuego(ObjectOutputStream out) throws IOException {
-        boolean gameContinues = !premios.isEmpty();
+private static boolean verificarEstadoJuego(ObjectOutputStream out) throws IOException {
+    boolean gameContinues = !premios.isEmpty();
 
-        if (!gameContinues) {
-            out.writeObject("El juego ha finalizado. No hay premios disponibles.");
-            out.flush();
-        } else {
-            out.writeObject("");
-        }
-
-        return gameContinues;
+    if (!gameContinues) {
+        out.writeObject("El juego ha finalizado. No hay premios disponibles.");
+        out.flush();
+    } else {
+        out.writeObject("");  // Cambiado: enviar un mensaje vacío si el juego continúa
+        out.flush();
     }
+
+    return gameContinues;
+}
+
 }
