@@ -40,25 +40,25 @@ public class PantallaTablero extends javax.swing.JFrame {
             clientId = (int) in.readObject();
 
             SwingUtilities.invokeLater(() -> {
-                // Set the client ID in the jTFID text field
                 jTFID.setText(Integer.toString(clientId));
                 jTFJugadas.setText(Integer.toString(intentos));
                 jTFPremios.setText(Integer.toString(premiosGanados));
                 JOptionPane.showMessageDialog(this, "Conectado al servidor. ID: " + clientId);
 
                 // Verificar si el juego continúa
+                
                 try {
-                    boolean Continuar = !in.readObject().equals("El juego ha finalizado. No hay premios disponibles.");
+                    String mensaje = in.readLine();                    
+                    boolean Continuar = (mensaje.equals("El juego ha finalizado. No hay premios disponibles."));
 
                     if (!Continuar) {
                         JOptionPane.showMessageDialog(this, "El juego ha finalizado. No hay premios disponibles.");
                         jBEnviar.setEnabled(false);
-                    }
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
+                    }               
                 } catch (IOException ex) {
                     Logger.getLogger(PantallaTablero.class.getName()).log(Level.SEVERE, null, ex);
                 }
+                
             });
 
         } catch (Exception e) {

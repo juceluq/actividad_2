@@ -140,6 +140,8 @@ public class Server {
         if (!gameContinues) {
             out.writeObject("El juego ha finalizado. No hay premios disponibles.");
             out.flush();
+        } else {
+            out.writeObject("");
         }
 
         return gameContinues;
