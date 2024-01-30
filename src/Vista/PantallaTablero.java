@@ -49,13 +49,12 @@ public class PantallaTablero extends javax.swing.JFrame {
 
                     // Verificar si el juego continúa
                     String mensaje = (String) in.readObject();
-                    boolean continuar = !mensaje.equals("El juego ha finalizado. No hay premios disponibles.");
+                    boolean continuar = mensaje.equals("El juego ha finalizado. No hay premios disponibles.");
 
                     if (!continuar) {
                         JOptionPane.showMessageDialog(this, "El juego ha finalizado. No hay premios disponibles.");
                         jBEnviar.setEnabled(false);
                     }
-
                 } catch (IOException ex) {
                     Logger.getLogger(PantallaTablero.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (ClassNotFoundException ex) {
@@ -225,10 +224,9 @@ public class PantallaTablero extends javax.swing.JFrame {
 
     private void jBEnviarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBEnviarActionPerformed
         try (
-                Socket socket1 = new Socket(SERVER_IP, SERVER_PUERTO);
-                ObjectOutputStream out = new ObjectOutputStream(socket1.getOutputStream());
-                ObjectInputStream in = new ObjectInputStream(socket1.getInputStream())) {
-
+                Socket socket = new Socket(SERVER_IP, SERVER_PUERTO);
+                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
             // Enviar las coordenadas al servidor
             int fila = Integer.parseInt(jTFFila.getText());
             int columna = Integer.parseInt(jTFColumnas.getText());
@@ -236,41 +234,25 @@ public class PantallaTablero extends javax.swing.JFrame {
             out.flush();
 
             // Recibir la respuesta del servidor
-            Object respuestaObjeto = in.readObject();
-
-            if (respuestaObjeto instanceof String) {
-                // Manejar respuesta si es un String
-                String respuesta = (String) respuestaObjeto;
-                jTArea.append(respuesta + "\n");
-            } else if (respuestaObjeto instanceof Integer) {
-                // Manejar respuesta si es un número (posiblemente un código de estado)
-                int codigoEstado = (Integer) respuestaObjeto;
-
-                // Realiza las acciones apropiadas según el código de estado si es necesario
-                switch (codigoEstado) {
-                    case 0:
-                        // Ejemplo: Código de estado 0 indica juego finalizado
-                        jTArea.append("Juego finalizado\n");
-                        jBEnviar.setEnabled(false);
-                        break;
-                    // Agrega más casos según sea necesario
-                    default:
-                        // Otros códigos de estado
-                        jTArea.append("Código de estado desconocido: " + codigoEstado + "\n");
-                }
-            } else {
-                // Manejar otros tipos de respuesta si es necesario
-                jTArea.append("Respuesta inesperada del servidor\n");
-            }
+            String respuesta = (String) in.readObject();
+            jTArea.append(respuesta + "\n");
 
             // Actualizar intentos y premios ganados
+            if (respuesta.startsWith("Felicidades")) {
+                premiosGanados++;
+            }
             intentos++;
+
             updateJugadasPremios();
+
+            // Terminar si el juego ha finalizado
+            if (respuesta.startsWith("Juego finalizado")) {
+                jBEnviar.setEnabled(false);
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Error al enviar coordenadas al servidor.");
-
         }    }//GEN-LAST:event_jBEnviarActionPerformed
 
     private void jTFFilaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTFFilaActionPerformed
