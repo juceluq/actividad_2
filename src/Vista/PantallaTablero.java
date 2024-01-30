@@ -20,6 +20,7 @@ public class PantallaTablero extends javax.swing.JFrame {
      */
     private static final String SERVER_IP = "127.0.0.1";
     private static final int SERVER_PUERTO = 12345;
+    private Socket socket;
 
     private int clientId;
     private int intentos = 0;
@@ -32,33 +33,34 @@ public class PantallaTablero extends javax.swing.JFrame {
     }
 
     private void conectarServidor() {
-        try (
-                Socket socket = new Socket(SERVER_IP, SERVER_PUERTO);
-                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-                ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
+        try {
+            socket = new Socket(SERVER_IP, SERVER_PUERTO);
+            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
             // Recibir ID del cliente
             clientId = (int) in.readObject();
 
             SwingUtilities.invokeLater(() -> {
-                jTFID.setText(Integer.toString(clientId));
-                jTFJugadas.setText(Integer.toString(intentos));
-                jTFPremios.setText(Integer.toString(premiosGanados));
-                JOptionPane.showMessageDialog(this, "Conectado al servidor. ID: " + clientId);
-
-                // Verificar si el juego continúa
-                
                 try {
-                    String mensaje = in.readLine();                    
-                    boolean Continuar = (mensaje.equals("El juego ha finalizado. No hay premios disponibles."));
+                    jTFID.setText(Integer.toString(clientId));
+                    jTFJugadas.setText(Integer.toString(intentos));
+                    jTFPremios.setText(Integer.toString(premiosGanados));
+                    JOptionPane.showMessageDialog(this, "Conectado al servidor. ID: " + clientId);
 
-                    if (!Continuar) {
+                    // Verificar si el juego continúa
+                    String mensaje = (String) in.readObject();
+                    boolean continuar = mensaje.equals("El juego ha finalizado. No hay premios disponibles.");
+
+                    if (!continuar) {
                         JOptionPane.showMessageDialog(this, "El juego ha finalizado. No hay premios disponibles.");
                         jBEnviar.setEnabled(false);
-                    }               
+                    }
                 } catch (IOException ex) {
                     Logger.getLogger(PantallaTablero.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (ClassNotFoundException ex) {
+                    Logger.getLogger(PantallaTablero.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                
+
             });
 
         } catch (Exception e) {
@@ -122,6 +124,12 @@ public class PantallaTablero extends javax.swing.JFrame {
         jLabel4.setText("Jugadas:");
 
         jLabel5.setText("Premios:");
+
+        jTFPremios.setEditable(false);
+
+        jTFJugadas.setEditable(false);
+
+        jTFID.setEditable(false);
 
         jTFFila.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
