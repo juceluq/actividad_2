@@ -11,32 +11,32 @@ import java.util.Random;
 
 public class Server {
 
-    private static final int PORT = 12345;
-    private static final int ROWS = 3;
-    private static final int COLUMNS = 4;
-    private static final int MAX_ATTEMPTS = 4;
+    private static final int PUERTO = 12345;
+    private static final int FILAS = 3;
+    private static final int COLUMNAS = 4;
+    private static final int INTENTOS_MAX = 4;
 
-    private static String[][] board = new String[ROWS][COLUMNS];
-    private static Map<String, int[]> prizes = new HashMap<>();
-    private static int clientIdCounter = 0;
-    private static int attempts;
-    private static int prizesWon;
+    private static String[][] tabla = new String[FILAS][COLUMNAS];
+    private static Map<String, int[]> premios = new HashMap<>();
+    private static int clientIdContador = 0;
+    private static int intentos;
+    private static int premiosGanados;
     private static Random rd = new Random();
 
     public static void main(String[] args) {
-        initializeBoard();
-        displayBoard();
+        iniciarTabla();
+        mostrarTabla();
 
         try {
-            ServerSocket serverSocket = new ServerSocket(PORT);
-            System.out.println("Servidor iniciado en el puerto " + PORT);
+            ServerSocket serverSocket = new ServerSocket(PUERTO);
+            System.out.println("Servidor iniciado en el puerto " + PUERTO);
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                System.out.println("Cliente conectado => ID cliente: " + getNextClientId());
+                System.out.println("Cliente conectado => ID cliente: " + getProxClientId());
 
                 // Iniciar un nuevo hilo para manejar al cliente
-                new Thread(() -> handleClient(clientSocket)).start();
+                new Thread(() -> manejadorCliente(clientSocket)).start();
             }
 
         } catch (IOException e) {
@@ -44,43 +44,43 @@ public class Server {
         }
     }
 
-    private static synchronized int getNextClientId() {
-        return ++clientIdCounter;
+    private static synchronized int getProxClientId() {
+        return clientIdContador++;
     }
 
-    private static void initializeBoard() {
+    private static void iniciarTabla() {
         String[] prizeNames = {"Crucero", "Entradas", "Masaje", "1000€"};
 
-        for (int i = 0; i < ROWS; i++) {
-            for (int j = 0; j < COLUMNS; j++) {
-                board[i][j] = "";
+        for (int i = 0; i < FILAS; i++) {
+            for (int j = 0; j < COLUMNAS; j++) {
+                tabla[i][j] = "";
             }
         }
 
-        for (String prize : prizeNames) {
+        for (String premio : prizeNames) {
             int row, column;
             do {
-                row = rd.nextInt(ROWS);
-                column = rd.nextInt(COLUMNS);
-            } while (!board[row][column].isEmpty()); // Repite si la posición ya está ocupada
+                row = rd.nextInt(FILAS);
+                column = rd.nextInt(COLUMNAS);
+            } while (!tabla[row][column].isEmpty()); // Repite si la posición ya está ocupada
 
-            board[row][column] = prize;
-            prizes.put(prize, new int[]{row, column});
+            tabla[row][column] = premio;
+            premios.put(premio, new int[]{row, column});
         }
     }
 
-    private static void displayBoard() {
+    private static void mostrarTabla() {
         System.out.println("Tablero Inicial:");
-        for (int i = 0; i < ROWS; i++) {
-            for (int j = 0; j < COLUMNS; j++) {
-                System.out.print(board[i][j] + "\t");
+        for (int i = 0; i < FILAS; i++) {
+            for (int j = 0; j < COLUMNAS; j++) {
+                System.out.print(tabla[i][j] + "\t");
             }
             System.out.println();
         }
     }
 
-    private static void handleClient(Socket clientSocket) {
-        int clientId = getNextClientId();
+    private static void manejadorCliente(Socket clientSocket) {
+        int clientId = getProxClientId();
 
         try (
                 ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream()); ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream())) {
@@ -89,41 +89,41 @@ public class Server {
             out.flush();
 
             // Verificar si el juego continúa
-            boolean gameContinues = checkGameStatus(out);
+            boolean continuar = verificarEstadoJuego(out);
 
-            if (gameContinues) {
-                attempts = 0;
-                prizesWon = 0;
+            if (continuar) {
+                intentos = 0;
+                premiosGanados = 0;
 
-                while (attempts < MAX_ATTEMPTS && prizesWon < prizes.size()) {
+                while (intentos < INTENTOS_MAX && premiosGanados < premios.size()) {
                     // Recibir las coordenadas del cliente
-                    int[] coordinates = (int[]) in.readObject();
-                    int row = coordinates[0];
-                    int column = coordinates[1];
+                    int[] coordenadas = (int[]) in.readObject();
+                    int fila = coordenadas[0];
+                    int columna = coordenadas[1];
 
                     // Verificar si hay un premio en esa posición
-                    String prize = board[row][column];
-                    if (!prize.isEmpty()) {
+                    String premio = tabla[fila][columna];
+                    if (!premio.isEmpty()) {
                         // Enviar el premio al cliente
-                        out.writeObject("Felicidades, has encontrado " + prize + "!");
+                        out.writeObject("Felicidades, has encontrado " + premio + "!");
                         out.flush();
 
                         // Eliminar el premio del tablero
-                        board[row][column] = "";
-                        prizes.remove(prize);
-                        prizesWon++;
+                        tabla[fila][columna] = "";
+                        premios.remove(premio);
+                        premiosGanados++;
                     } else {
                         // Enviar mensaje de que no hay premio en esa posición
-                        out.writeObject("No hay premio en esa posición. Intento: " + (attempts + 1));
+                        out.writeObject("No hay premio en esa posición. Intento: " + (intentos + 1));
                         out.flush();
                     }
 
-                    attempts++;
+                    intentos++;
                 }
 
                 // Enviar notificación de juego finalizado al cliente
-                if (attempts == MAX_ATTEMPTS || prizesWon == prizes.size()) {
-                    out.writeObject("Juego finalizado. Intentos: " + attempts + ", Premios ganados: " + prizesWon);
+                if (intentos == INTENTOS_MAX || premiosGanados == premios.size()) {
+                    out.writeObject("Juego finalizado. Intentos: " + intentos + ", Premios ganados: " + premiosGanados);
                     out.flush();
                 }
             }
@@ -134,8 +134,8 @@ public class Server {
         }
     }
 
-    private static boolean checkGameStatus(ObjectOutputStream out) throws IOException {
-        boolean gameContinues = !prizes.isEmpty();
+    private static boolean verificarEstadoJuego(ObjectOutputStream out) throws IOException {
+        boolean gameContinues = !premios.isEmpty();
 
         if (!gameContinues) {
             out.writeObject("El juego ha finalizado. No hay premios disponibles.");

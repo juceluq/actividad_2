@@ -15,21 +15,21 @@ public class PantallaTablero extends javax.swing.JFrame {
      * Creates new form PantallaTablero
      */
     private static final String SERVER_IP = "127.0.0.1";
-    private static final int SERVER_PORT = 12345;
+    private static final int SERVER_PUERTO = 12345;
 
     private int clientId;
-    private int attempts = 0;
-    private int prizesWon = 0;
+    private int intentos = 0;
+    private int premiosGanados = 0;
 
     public PantallaTablero() {
         initComponents();
-        connectToServer();
+        conectarServidor();
 
     }
 
-    private void connectToServer() {
+    private void conectarServidor() {
         try (
-                Socket socket = new Socket(SERVER_IP, SERVER_PORT);
+                Socket socket = new Socket(SERVER_IP, SERVER_PUERTO);
                 ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
                 ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
             // Recibir ID del cliente
@@ -37,9 +37,9 @@ public class PantallaTablero extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Conectado al servidor. ID: " + clientId);
 
             // Verificar si el juego continúa
-            boolean gameContinues = !in.readObject().equals("El juego ha finalizado. No hay premios disponibles.");
+            boolean Continuar = !in.readObject().equals("El juego ha finalizado. No hay premios disponibles.");
 
-            if (!gameContinues) {
+            if (!Continuar) {
                 JOptionPane.showMessageDialog(this, "El juego ha finalizado. No hay premios disponibles.");
                 jBEnviar.setEnabled(false);
             }
@@ -51,8 +51,8 @@ public class PantallaTablero extends javax.swing.JFrame {
     }
 
     private void updateStats() {
-        jTFJugadas.setText(Integer.toString(attempts));
-        jTFPremios.setText(Integer.toString(prizesWon));
+        jTFJugadas.setText(Integer.toString(intentos));
+        jTFPremios.setText(Integer.toString(premiosGanados));
     }
 
     /**
@@ -199,7 +199,7 @@ public class PantallaTablero extends javax.swing.JFrame {
 
     private void jBEnviarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBEnviarActionPerformed
         try (
-                Socket socket = new Socket(SERVER_IP, SERVER_PORT);
+                Socket socket = new Socket(SERVER_IP, SERVER_PUERTO);
                 ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
                 ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
             // Enviar las coordenadas al servidor
@@ -214,9 +214,9 @@ public class PantallaTablero extends javax.swing.JFrame {
 
             // Actualizar intentos y premios ganados
             if (response.startsWith("Felicidades")) {
-                prizesWon++;
+                premiosGanados++;
             }
-            attempts++;
+            intentos++;
 
             updateStats();
 
